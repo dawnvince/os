@@ -21,6 +21,14 @@ extern void Initialize(int argc, char **argv); 	// Initialization,
 						// called before anything else
 extern void Cleanup();				// Cleanup, called when
 						// Nachos is done.
+#define MaxThreadnum 128
+
+struct ThreadID{
+    bool t_flag;
+    Thread *thread;
+};
+
+extern ThreadID threadID[MaxThreadnum];
 
 extern Thread *currentThread;			// the thread holding the CPU
 extern Thread *threadToBeDestroyed;  		// the thread that just finished

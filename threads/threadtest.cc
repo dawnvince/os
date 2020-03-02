@@ -13,7 +13,7 @@
 #include "system.h"
 
 // testnum is set in main.cc
-int testnum = 1;
+int testnum = 2;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -29,8 +29,28 @@ SimpleThread(int which)
 {
     int num;
     
-    for (num = 0; num < 5; num++) {
+    for (num = 0; num < 4; num++) {
 	printf("*** thread %d looped %d times\n", which, num);
+        currentThread->Yield();
+    }
+}
+
+
+void TSCommand(){
+    char *s;
+    for(int i = 0;i < MaxThreadnum; ++i){
+        if(threadID[i].t_flag == true){
+            printf("thread_id %4d   thread_name %20s   thread_status %9s\n",threadID[i].thread->getTid(),threadID[i].thread->getName(),threadID[i].thread->getStatusString());
+        }
+    }
+}
+
+void TSTestThread(int which){
+    int num;
+    
+    for (num = 0; num < 4; num++) {
+    printf("*** thread %d looped %d times\n", which, num);
+        TSCommand();
         currentThread->Yield();
     }
 }
@@ -46,12 +66,46 @@ ThreadTest1()
 {
     DEBUG('t', "Entering ThreadTest1");
 
-    Thread *t = new Thread("forked thread");
+    Thread *t = new Thread("forked thread t");
+    Thread *t1 = new Thread("forked thread t1");
+    Thread *t2 = new Thread("forked thread t2");
+    Thread *t3 = new Thread("forked thread t3");
+    Thread *t4 = new Thread("forked thread t4");
 
-    t->Fork(SimpleThread, 1);
+    t->Fork(SimpleThread, t->getTid());
+    t1->Fork(SimpleThread, t1->getTid());
+    t2->Fork(SimpleThread, t2->getTid());
+    t3->Fork(SimpleThread, t3->getTid());
+    t4->Fork(SimpleThread, t4->getTid());
+
     SimpleThread(0);
 }
 
+void
+ThreadTest_limit()
+{
+    DEBUG('t', "Entering ThreadTest1");
+
+    for(int i = 0;i < 129;++i){
+        Thread *t = new Thread("fork thread");
+        printf("*** thread %d looped %d times\n", t->getTid(), 0);
+        currentThread->Yield();
+    }
+
+    SimpleThread(0);
+}
+
+void
+TSTest(){
+    Thread *t = new Thread("forked thread t");
+    Thread *t1 = new Thread("forked thread t1");
+    Thread *t2 = new Thread("forked thread t2");
+     t->Fork(TSTestThread, t->getTid());
+    t1->Fork(TSTestThread, t1->getTid());
+    t2->Fork(TSTestThread, t2->getTid());
+
+    
+}
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -64,6 +118,12 @@ ThreadTest()
     case 1:
 	ThreadTest1();
 	break;
+    case 2:
+    ThreadTest_limit();
+    break;
+    case 3:
+    TSTest();
+    break;
     default:
 	printf("No test specified.\n");
 	break;

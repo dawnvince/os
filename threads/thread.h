@@ -58,6 +58,7 @@
 
 // Thread state
 enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
+const char* const ThreadStatusString[] = { "JUST_CREATED", "RUNNING", "READY", "BLOCKED" };
 
 // external function, dummy routine whose sole job is to call Thread::Print
 extern void ThreadPrint(int arg);	 
@@ -114,6 +115,16 @@ class Thread {
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()
+  private:
+
+    int tID;
+    int uID;
+
+  public:
+    int getUid();
+    int getTid();
+    int initializeTid();
+    const char* getStatusString(){ return ThreadStatusString[status]; }
 
 #ifdef USER_PROGRAM
 // A thread running a user program actually has *two* sets of CPU registers -- 

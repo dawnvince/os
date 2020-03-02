@@ -34,10 +34,15 @@
 
 Thread::Thread(char* threadName)
 {
+    if((tID = initializeTid()) == -1){
+        printf("线程数量超过上限，无法创建");
+        ASSERT(tID != -1);
+    }
     name = threadName;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
+    
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -62,6 +67,8 @@ Thread::~Thread()
     ASSERT(this != currentThread);
     if (stack != NULL)
 	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
+    threadID[this->tID].t_flag = false;
+    threadID[this->tID].thread = NULL;
 }
 
 //----------------------------------------------------------------------
@@ -318,3 +325,28 @@ Thread::RestoreUserState()
 	machine->WriteRegister(i, userRegisters[i]);
 }
 #endif
+
+int 
+Thread::getUid(){
+    return uID;
+}
+
+int 
+Thread::getTid(){
+    return tID;
+}
+
+int 
+Thread::initializeTid(){
+    int i;
+    for(i = 0;i < MaxThreadnum;++i){
+        if(threadID[i].t_flag == false){
+            threadID[i].t_flag = true;
+            threadID[i].thread = this;
+            tID = i;
+            return tID;
+        }
+    }
+    if(i >= MaxThreadnum)return -1;
+}
+
