@@ -55,6 +55,8 @@
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
 #define StackSize	(4 * 1024)	// in words
 
+#define MaxPrio 5
+
 
 // Thread state
 enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
@@ -82,7 +84,7 @@ class Thread {
     int machineState[MachineStateSize];  // all registers except for stackTop
 
   public:
-    Thread(char* debugName);		// initialize a Thread 
+    Thread(char* debugName,int priority = MaxPrio);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
 					// must not be running when delete 
@@ -119,11 +121,16 @@ class Thread {
 
     int tID;
     int uID;
+    int prio; // range from 0~MaxPrio
 
   public:
+
+    int timeSlice_start;
     int getUid();
     int getTid();
     int initializeTid();
+    void changePrio(int new_prio);
+    int getPrio();
     const char* getStatusString(){ return ThreadStatusString[status]; }
 
 #ifdef USER_PROGRAM

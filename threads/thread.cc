@@ -32,12 +32,14 @@
 //	"threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
 
-Thread::Thread(char* threadName)
+Thread::Thread(char* threadName,int priority)
 {
     if((tID = initializeTid()) == -1){
         printf("线程数量超过上限，无法创建");
         ASSERT(tID != -1);
     }
+    prio = (priority > MaxPrio ? MaxPrio : priority);
+    prio = (prio > 0 ? prio : 0);
     name = threadName;
     stackTop = NULL;
     stack = NULL;
@@ -100,10 +102,14 @@ Thread::Fork(VoidFunctionPtr func, int arg)
     StackAllocate(func, arg);
 
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    printf("New forked thread %d!!!!\n",this->getTid());
     scheduler->ReadyToRun(this);	// ReadyToRun assumes that interrupts 
 					// are disabled!
+
+
     (void) interrupt->SetLevel(oldLevel);
-}    
+}   
+
 
 //----------------------------------------------------------------------
 // Thread::CheckOverflow
@@ -154,7 +160,7 @@ Thread::Finish ()
     ASSERT(this == currentThread);
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
-    
+    printf("thread %d is to be destroyed!\n",this->tID);
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
@@ -188,9 +194,10 @@ Thread::Yield ()
     
     DEBUG('t', "Yielding thread \"%s\"\n", getName());
     
+    scheduler->ReadyToRun(this);
+
     nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {
-	scheduler->ReadyToRun(this);
 	scheduler->Run(nextThread);
     }
     (void) interrupt->SetLevel(oldLevel);
@@ -334,6 +341,16 @@ Thread::getUid(){
 int 
 Thread::getTid(){
     return tID;
+}
+
+void 
+Thread::changePrio(int new_prio){
+    prio = new_prio;
+}
+
+int 
+Thread::getPrio(){
+    return prio;
 }
 
 int 

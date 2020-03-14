@@ -13,7 +13,7 @@
 #include "system.h"
 
 // testnum is set in main.cc
-int testnum = 2;
+int testnum = 1;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -27,14 +27,37 @@ int testnum = 2;
 void
 SimpleThread(int which)
 {
+	int num;
+    for (num = 0; num < 5; num++) {
+    printf("*** thread %d looped %d times with priority %d\n", currentThread->getTid(), num, currentThread->getPrio());
+    }
+}
+//时间轮转测试
+void 
+SimpleTest_timerSlice_Thread(int which){
+    for(int i = 0; i < 20;++i){
+        //printf("sysTick is %d\n",stats->systemTicks);
+        interrupt->OneTick();
+        int ticks = stats->systemTicks - currentThread->timeSlice_start;
+        if(ticks >= TimerSlice){
+            printf("thread %d yield with running time %d \n",currentThread->getTid(),ticks);
+            currentThread->Yield();
+        }
+    }
+}
+//抢占调度算法测试
+void
+ForkThread(int which)
+{
     int num;
     
-    for (num = 0; num < 4; num++) {
-	printf("*** thread %d looped %d times\n", which, num);
+    for (num = 0; num < 2; num++) {
+         printf("*** thread %d looped %d times with priority %d\n", currentThread->getTid(), num, currentThread->getPrio());
+        Thread *t = new Thread("forked thread t",0);
+        t->Fork(SimpleThread,t->getTid());
         currentThread->Yield();
     }
 }
-
 
 void TSCommand(){
     char *s;
@@ -61,25 +84,42 @@ void TSTestThread(int which){
 //	to call SimpleThread, and then calling SimpleThread ourselves.
 //----------------------------------------------------------------------
 
+// 抢占调度ThreadTest
+
+// void
+// ThreadTest1()
+// {
+//     DEBUG('t', "Entering ThreadTest1");
+
+//     Thread *t = new Thread("forked thread t",2);
+//     Thread *t1 = new Thread("forked thread t1",4);
+//     Thread *t2 = new Thread("forked thread t2",0);
+
+
+//     t1->Fork(SimpleThread,t1->getTid());
+//     t->Fork(ForkThread,t->getTid());
+//     t2->Fork(SimpleThread,t2->getTid());
+
+// }
+
+// 时间片轮转ThreadTest
+
 void
 ThreadTest1()
 {
     DEBUG('t', "Entering ThreadTest1");
 
-    Thread *t = new Thread("forked thread t");
-    Thread *t1 = new Thread("forked thread t1");
-    Thread *t2 = new Thread("forked thread t2");
-    Thread *t3 = new Thread("forked thread t3");
-    Thread *t4 = new Thread("forked thread t4");
+    Thread *t = new Thread("forked thread t",2);
+    Thread *t1 = new Thread("forked thread t1",4);
+    Thread *t2 = new Thread("forked thread t2",0);
 
-    t->Fork(SimpleThread, t->getTid());
-    t1->Fork(SimpleThread, t1->getTid());
-    t2->Fork(SimpleThread, t2->getTid());
-    t3->Fork(SimpleThread, t3->getTid());
-    t4->Fork(SimpleThread, t4->getTid());
 
-    SimpleThread(0);
+    t->Fork(SimpleTest_timerSlice_Thread,t1->getTid());
+    t1->Fork(SimpleTest_timerSlice_Thread,t->getTid());
+    t2->Fork(SimpleTest_timerSlice_Thread,t2->getTid());
+
 }
+
 
 void
 ThreadTest_limit()
@@ -92,7 +132,7 @@ ThreadTest_limit()
         currentThread->Yield();
     }
 
-    SimpleThread(0);
+    //SimpleThread(0);
 }
 
 void
@@ -106,6 +146,8 @@ TSTest(){
 
     
 }
+
+
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.

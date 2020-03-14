@@ -56,7 +56,10 @@ Scheduler::ReadyToRun (Thread *thread)
     DEBUG('t', "Putting thread %s on ready list.\n", thread->getName());
 
     thread->setStatus(READY);
+    //时间片轮转算法
     readyList->Append((void *)thread);
+    // 抢占调度算法
+    //readyList->SortedInsert((void *)thread,thread->getPrio());
 }
 
 //----------------------------------------------------------------------
@@ -105,6 +108,9 @@ Scheduler::Run (Thread *nextThread)
     currentThread = nextThread;		    // switch to the next thread
     currentThread->setStatus(RUNNING);      // nextThread is now running
     
+    // timer
+    currentThread->timeSlice_start = stats->systemTicks;
+
     DEBUG('t', "Switching from thread \"%s\" to thread \"%s\"\n",
 	  oldThread->getName(), nextThread->getName());
     
